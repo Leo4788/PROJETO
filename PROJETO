@@ -1,0 +1,357 @@
+package Visao;
+
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+import Conexao.Conexao;
+import beans.departamento;
+
+/*import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Scanner;
+
+import Conexao.Conexao;
+import beans.departamento;
+
+/*
+1. Cadastro de departamento
+2. Remoção de departamento
+
+3. Busca departamento pelo nome
+4. Busca departamentos pela capacidade de funcionários
+5. Relatório de departamentos (com todos os dados de todos os departamentos)
+6. Sair
+*/
+
+public class Tela_Departamento {
+	
+	static Connection conexaoRecebida = null; //variavel global
+
+	public static void main(String[] args) {
+		
+		String menu = 
+				  "1. Cadastro de departamento\n"
+				+ "2. Remo�ao de departamento\n"
+				+ "3. Busca departamento pelo nome\n"		  
+				+ "4. Busca departamento atrav�s da capacidade de funcion�rios\n"
+				+ "5. Relat�rio do departamento\n"
+				+ "6. Sair\n\n";
+		
+		System.out.println(menu);
+		Scanner leMenu = new Scanner(System.in);
+		int opcao = leMenu.nextInt();
+		while(opcao != 7) {
+			
+			switch(opcao) {
+				case 1:{
+				
+							
+					departamento p = leDados();
+					System.out.println("\n"+p.getnomedepartamento()+"\n"+p.getlocalizacao()+"\n"+p.getcapacidade()+"\n"+p.getdatacriacao()+"\n"+p.getdescricao()+"\n");
+					gravanomedepartamento(p);
+					
+						break;
+				}
+				case 2:{
+					
+					
+					Scanner leDados = new Scanner(System.in);
+					System.out.println("Digite o nome do departamento a ser removido:");
+					String nomedepartamento = leDados.next();
+					
+					
+					removeDepartamento(nomedepartamento);
+					
+					break;
+				}
+				case 3:{
+					
+					System.out.println("Digite o nome do departamento que voc� deseja buscar: ");
+					
+					Scanner leDados = new Scanner(System.in);
+					String departamentoBuscado = leDados.next();
+					departamento dEncontrado = buscaDepartamentoPeloNome(departamentoBuscado);
+					if (dEncontrado == null) {
+					System.out.println("\n\nN�o foi encontrado um departamento com esse nome\n");
+					
+					}
+					
+					else {
+						System.out.println("\n Nome:" + dEncontrado.getnomedepartamento());
+						
+						System.out.println("\n Localiza��o: " + dEncontrado.getlocalizacao());
+						
+						System.out.println("\n Capacidade: " + dEncontrado.getcapacidade());
+
+						System.out.println("\n Data de cria��o: " + dEncontrado.getdatacriacao());
+						
+						System.out.println("\n Descri��o: " + dEncontrado.getdescricao()+"\n");
+					}
+					break;
+				}
+				case 4:{
+					System.out.println("Digite a capacidade que voc� deseja buscar: ");
+					Scanner leDados = new Scanner(System.in);
+					String capacidadeBuscada = leDados.next();
+					
+					departamento dEncontrado = buscaCapacidade(capacidadeBuscada);
+					if(dEncontrado == null) {
+						System.out.println("\nN�o foi encontrado um departamento com essa capacidade!");
+					}
+					else{
+						System.out.println("\nNome: " + dEncontrado.getnomedepartamento());
+						System.out.println("Localiza��o: " + dEncontrado.getlocalizacao());
+						System.out.println("Capacidade: " + dEncontrado.getcapacidade());
+						System.out.println("dataCriacao de cria��o: " + dEncontrado.getdatacriacao());
+						System.out.println("Descri��o: " + dEncontrado.getdescricao());
+
+					}
+					break;
+				}
+				
+				case 5:{
+					ArrayList <departamento> vetP = buscaDepartamentos();
+					
+						for(int i=0; i < vetP.size(); i++) {
+						departamento p = vetP.get(i);
+						System.out.println("\n\nNome: " + p.getnomedepartamento());
+						System.out.println("Localizacao: " + p.getlocalizacao());
+						System.out.println("Capacidade: " + p.getcapacidade());
+						System.out.println("Data de Cria��o: " + p.getdatacriacao());
+						System.out.println("Descri��o: " + p.getdescricao()+"\n");
+
+					}
+					
+					break;
+				}
+				
+			
+				case 6:{
+					System.out.println("\nAgradecemos por utlizar nosso sistema! :D\n");
+					break;
+				}
+				default:{
+					System.out.println("Opcao invalida!");
+					break;
+				}
+			
+			}
+			System.out.println(menu);
+			opcao = leMenu.nextInt();
+		}
+	}
+		
+	
+		
+		private static ArrayList <departamento> buscaDepartamentos() {
+			
+			
+			ArrayList <departamento> vetP = new ArrayList<departamento>();
+			
+			try {
+				Connection conexaoRecebida = Conexao.getInstance();
+				
+				String sql = "SELECT * FROM departamento";
+				
+				PreparedStatement stmt = conexaoRecebida.prepareStatement(sql);
+				
+				ResultSet rs = stmt.executeQuery();
+				
+				while(rs.next() == true) {
+														
+					String nomedepartamento = rs.getString("nomedepartamento");
+					
+					String localizacao = rs.getString("localizacao");
+					
+					String capacidade = rs.getString("capacidade");
+					
+					String datacriacao = rs.getString("datacriacao");
+
+					String descricao = rs.getString("descricao");
+
+					departamento p = new departamento(nomedepartamento, localizacao, capacidade, datacriacao, descricao);
+					vetP.add(p);
+					
+				}
+
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+				System.out.println("Erro ao buscar departamento!");
+			}
+			
+			return vetP;
+		
+		
+		
+		
+		}
+	private static departamento buscaCapacidade (String capacidadeBuscada) {
+		
+		departamento p = null;
+		
+		try {
+			
+			conexaoRecebida = Conexao.getInstance();
+			
+			String sql = "SELECT * FROM departamento WHERE capacidade = ?";
+			
+			PreparedStatement stmt = conexaoRecebida.prepareStatement(sql);
+			
+			stmt.setString(1, capacidadeBuscada);
+			
+			ResultSet rs = stmt.executeQuery();
+			
+			boolean retorno = rs.next();
+			
+			if(retorno == true) {
+				
+				String nomedepartamento = rs.getString("nomedepartamento");
+				
+				String localizacao = rs.getString("localizacao");
+
+				String capacidade = rs.getString("capacidade");
+
+				String datacriacao = rs.getString("datacriacao");
+
+				String descricao = rs.getString("descricao");
+
+				p = new departamento(nomedepartamento, localizacao, capacidade, datacriacao, descricao);
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			System.out.println("Erro ao buscar departamento!");
+		}
+		
+		return p;
+		
+	}
+
+	private static departamento buscaDepartamentoPeloNome(String departamentoBuscado) {
+
+		departamento p = null;
+		
+				try {
+					
+					conexaoRecebida = Conexao.getInstance();
+					
+					String sql = "SELECT * FROM departamento WHERE nomedepartamento LIKE ?";
+					
+					PreparedStatement stmt = conexaoRecebida.prepareStatement(sql);
+					
+					stmt.setString(1, departamentoBuscado);
+					
+					ResultSet rs = stmt.executeQuery();
+					
+					boolean retorno = rs.next();
+					
+					if(retorno == true) {
+						
+						String nomedepartamento = rs.getString("nomedepartamento");
+						
+						String localizacao = rs.getString("localizacao");
+						
+						String capacidade = rs.getString("capacidade");
+
+						String datacriacao = rs.getString("datacriacao");
+
+						String descricao = rs.getString("descricao");
+
+						p = new departamento(nomedepartamento, localizacao, capacidade, datacriacao, descricao);
+					}
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+					System.out.println("Erro ao buscar departamento!");
+				}
+				
+				return p;
+				
+			}
+
+		
+	public static departamento leDados() {
+		
+
+        Scanner leitor = new Scanner(System.in);
+	
+        System.out.println("Digite o nome do departamento: ");
+        String nomedepartamento = leitor.nextLine();
+
+        System.out.println("Digite a localiza��o (cidade): ");
+        String localizacao = leitor.nextLine();
+
+        System.out.println("Digite a capacidade do departamento: ");
+        String capacidade = leitor.nextLine();
+        
+        System.out.println("Digite a data da cria��o do departamento: ");
+        String dataCriacao = leitor.nextLine();
+        
+        System.out.println("Descreva o departamento: ");
+        String descricao = leitor.nextLine();
+        
+        departamento p = new departamento(nomedepartamento, localizacao, capacidade, dataCriacao, descricao);	
+              
+        return p;
+		
+	}
+
+	private static void gravanomedepartamento (departamento p) {
+	
+		try {
+			 conexaoRecebida = Conexao.getInstance();
+			
+	
+			
+			String sql = "insert into departamento (nomedepartamento, localizacao, capacidade, datacriacao, descricao) values (?,?,?,?,?)";
+			
+			PreparedStatement stmt = conexaoRecebida.prepareStatement(sql);
+			
+			stmt.setString(1, p.getnomedepartamento());
+			stmt.setString(2, p.getlocalizacao());
+			stmt.setString(3, p.getcapacidade());
+			stmt.setString(4, p.getdatacriacao());
+			stmt.setString(5, p.getdescricao());
+			
+			stmt.execute();
+		
+			stmt.close();
+			
+		
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			System.out.println("Erro ao gravar departamento!\n");
+		}
+				
+	}
+	
+	private static void removeDepartamento (String nomedepartamento) {
+		try {
+			 conexaoRecebida = Conexao.getInstance();
+			
+			
+			String sql = "DELETE FROM departamento WHERE nomedepartamento = ?";
+			
+			PreparedStatement stmt = conexaoRecebida.prepareStatement(sql);
+			
+			stmt.setString(1, nomedepartamento);
+			
+			stmt.execute();
+			stmt.close();
+			
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			System.out.println("Erro!"); //verificar o motivo do erro!
+		}
+	}
+
+	
+
+}
